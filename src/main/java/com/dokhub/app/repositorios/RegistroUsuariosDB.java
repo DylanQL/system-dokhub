@@ -1,23 +1,16 @@
 package com.dokhub.app.repositorios;
 
-import com.dokhub.app.modelos.UsuarioGitHub;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 public class RegistroUsuariosDB {
 
-    // Apunta al mismo archivo que ya usas en tu proyecto
+    // Apunta al archivo exacto de tu base de datos en la raíz del proyecto
     private static final String URL_DB = "jdbc:sqlite:registro_dokploy.db";
 
-    private RegistroUsuariosDB() {
-        throw new IllegalStateException("Clase repositorio");
-    }
-
-    // Inicializa la tabla de usuarios si no existe
     public static void inicializarBaseDeDatos() {
         String sql = """
                     CREATE TABLE IF NOT EXISTS usuarios (
@@ -40,56 +33,15 @@ public class RegistroUsuariosDB {
         }
     }
 
-    // Inserta usuarios nuevos ignorando duplicados
-    public static void registrarUsuarioNuevo(String username) {
-        String sql = "INSERT OR IGNORE INTO usuarios (username, bloqueado, usado) VALUES (?, 'false', 'false')";
+    public static void liberarUsuariosUsados() {
+        String sql = "UPDATE usuarios SET usado = 'false' WHERE bloqueado = 'false'";
 
         try (Connection conn = DriverManager.getConnection(URL_DB);
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, username);
-            pstmt.executeUpdate();
+            int actualizados = pstmt.executeUpdate();
+            System.out.println("🔄 Ciclo reiniciado. Usuarios liberados: " + actualizados);
         } catch (SQLException e) {
-            System.err.println("❌ Error registrando usuario: " + e.getMessage());
+            System.err.println("❌ Error al reiniciar ciclo de usuarios: " + e.getMessage());
         }
-    }
-
-    // Actualiza el estado de bloqueo de un usuario
-    public static void actualizarEstadoBloqueo(String username, String estadoBloqueado) {
-        String sql = "UPDATE usuarios SET bloqueado = ? WHERE username = ?";
-
-        try (Connection conn = DriverManager.getConnection(URL_DB);
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, estadoBloqueado);
-            pstmt.setString(2, username);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("❌ Error actualizando bloqueo para " + username + ": " + e.getMessage());
-        }
-    }
-
-    // Método que utiliza la clase UsuarioGitHub para empaquetar los datos de SQLite
-    public static UsuarioGitHub obtenerUsuario(String usernameABuscar) {
-        String sql = "SELECT * FROM usuarios WHERE username = ?";
-
-        try (Connection conn = DriverManager.getConnection(URL_DB);
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, usernameABuscar);
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                return new UsuarioGitHub(
-                        rs.getString("username"),
-                        rs.getString("bloqueado"),
-                        rs.getString("usado"),
-                        rs.getString("fecha_inicio"),
-                        rs.getString("fecha_fin"),
-                        rs.getDouble("horas_realizadas"),
-                        rs.getString("cumplio_esperadas"));
-            }
-        } catch (SQLException e) {
-            System.err.println("❌ Error buscando al usuario: " + e.getMessage());
-        }
-        return null;
     }
 }

@@ -1,5 +1,5 @@
 # ========================
-# Maven (¡El más importante!)
+# Maven
 # ========================
 target/
 pom.xml.tag
@@ -17,6 +17,8 @@ buildNumber.properties
 # ========================
 *.class
 *.jar
+*.war
+*.ear
 *.zip
 *.tar.gz
 
@@ -30,8 +32,13 @@ Session.vim
 .netrwhist
 
 # ========================
-# Seguridad (¡Nunca subir claves a Git!)
+# Archivos de otros IDEs y Sistema
 # ========================
-.env
-LLave.pem
-registro_dokploy.db
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+*.log
+.DS_Store
